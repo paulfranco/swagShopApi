@@ -33,6 +33,45 @@ app.get('/product', function(req, res){
     });
 });
 
+app.get('/wishlist', function(req,res){
+    Wishlist.find({}).populate({path: 'products', model: 'Product'}).exec(function(err, wishLists) {
+        if (err) {
+            response.status(500).send({error: "Could not fetch wishlist"});
+        } else {
+            res.status(200).send(wishLists);
+        }
+    });
+});
+
+app.post('/wishlist', function(req, res){
+    var wishList = new Wishlist();
+    wishList.title = req.body.title;
+    wishList.save(function(err, newWishList) {
+        if (err) {
+            res.status(500).send({error: "Could not create wishlist"});
+        } else {
+            res.send(newWishList);
+        }
+    });
+});
+
+app.put('/wishlist/product/add', function(req, res) {
+    Product.findOne({_id: req.body.productId}, function(err, product){
+        if (err) {
+            response.status(500).send({error: "Could not add item to the wishlist"});
+        } else {
+            Wishlist.update({_id: req.body.wishListId}, {$addToSet: 
+            {products: product._id}}, function(err, wishList){
+                if (err) {
+                    response.status(500).send({error: "Could not add item to the wishlist"});
+                } else {
+                    res.send(wishList);
+                }
+            });
+        }
+    });
+});
+
 app.listen(3000, function() {
     console.log("Listening on port 3000...")
 });
